@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCL-90 症状自评量表 - 专业版</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 配置主题色：根据你的喜好设定为“清新治愈绿”
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4caf50', // 主绿色 (配合截图风格)
+                        primaryDark: '#2e7d32',
+                        secondary: '#ff9800', // 橙色 (用于中度/警告)
+                        bgLight: '#f0fdf4', // 极淡的绿色背景
+                        danger: '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'PingFang SC', 'Heiti SC', 'Microsoft YaHei', sans-serif; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        /* 模拟结果页的斑马纹表格 */
+        .table-row:nth-child(even) { background-color: #f9fafb; }
+        .table-row:hover { background-color: #f0fdf4; }
+    </style>
+</head>
+<body class="bg-[#f3f6f4] text-gray-700 min-h-screen">
+
+<div id="app" class="relative min-h-screen flex flex-col">
+
+    <header v-if="currentView === 'landing'" class="bg-white shadow-sm fixed w-full top-0 z-50 transition-all duration-300">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="font-bold text-xl text-primary flex items-center gap-2 tracking-wide">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                SCL-90 评估
+            </div>
+            <nav class="hidden md:flex space-x-8 text-sm text-gray-600 font-medium">
+                <a href="#" @click="scrollTo('about')" class="hover:text-primary transition">关于测试</a>
+                <a href="#" @click="scrollTo('dimensions')" class="hover:text-primary transition">评估维度</a>
+                <a href="#" @click="scrollTo('features')" class="hover:text-primary transition">测试特点</a>
+                <a href="#" @click="scrollTo('guide')" class="hover:text-primary transition">测试须知</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow" :class="currentView === 'landing' ? 'pt-16' : ''">
+        
+        <div v-if="currentView === 'landing'" class="fade-in">
+            
+            <section class="bg-gray-900 text-white py-20 px-4 text-center relative overflow-hidden">
+                <div class="max-w-4xl mx-auto relative z-10">
+                    <h1 class="text-3xl md:text-5xl font-bold mb-6 tracking-wider">SCL-90 症状自评量表</h1>
+                    <p class="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">专业的心理健康筛查工具，全面评估你的心理状态，及时发现潜在困扰</p>
+                    
+                    <div class="flex justify-center gap-4">
+                        <button @click="handleStartClick" class="bg-primary hover:bg-primaryDark text-white px-8 py-4 rounded-lg font-bold text-lg transition-transform transform hover:scale-105 shadow-lg shadow-primary/40">
+                            立即开始测试
+                        </button>
+                        <button @click="scrollTo('about')" class="bg-transparent border border-gray-600 text-gray-300 hover:border-white hover:text-white px-8 py-4 rounded-lg font-bold text-lg transition-colors">
+                            了解更多
+                        </button>
+                    </div>
+
+                    <div class="mt-12 flex justify-center gap-8 text-xs md:text-sm text-gray-500 uppercase tracking-widest">
+                        <span class="flex items-center gap-1"><svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> 9个评估维度</span>
+                        <span class="flex items-center gap-1"><svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg> 5-10分钟</span>
+                        <span class="flex items-center gap-1"><svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg> 隐私保护</span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="about" class="py-16 px-4 bg-white">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center mb-12">
+                        <h2 class="text-2xl font-bold text-gray-800">关于 SCL-90 测试</h2>
+                        <div class="w-12 h-1 bg-primary mx-auto mt-4"></div>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-10">
+                        <div>
+                            <h3 class="font-bold text-lg mb-4">测试简介</h3>
+                            <p class="text-gray-500 leading-relaxed text-sm text-justify">
+                                SCL-90（Symptom Checklist 90）症状自评量表由 Derogatis 于1975年编制，是目前国内外应用最广泛的心理症状筛查工具之一。该量表包含90个项目，涵盖了广泛的心理症状领域，能够全面评估个体的心理健康状况。
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-4">适用人群</h3>
+                            <p class="text-gray-500 leading-relaxed text-sm text-justify">
+                                适用于16岁以上的普通人群，可用于自我心理健康状况评估、心理问题筛查、治疗效果跟踪等。无论是希望了解自身心理状态的普通大众，还是需要进行心理评估的专业人士，都可以使用该量表。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="dimensions" class="py-16 px-4 bg-gray-50">
+                <div class="max-w-5xl mx-auto">
+                    <div class="text-center mb-12">
+                        <h2 class="text-2xl font-bold text-gray-800">9大评估维度</h2>
+                        <p class="text-gray-500 mt-2 text-sm">全面覆盖心理症状领域，提供全方位评估</p>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div v-for="f in factorsInfo" :key="f.title" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border border-gray-100">
+                            <h4 class="font-bold text-gray-800 mb-2">{{ f.title }}</h4>
+                            <p class="text-xs text-gray-500">{{ f.desc }}</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="guide" class="py-16 px-4 bg-white mb-10">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold text-gray-800 text-center mb-12">测试须知</h2>
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">1</div>
+                            <div>
+                                <h4 class="font-bold text-gray-800">测试环境</h4>
+                                <p class="text-sm text-gray-500 mt-1">请选择安静、舒适、不受打扰的环境进行测试。</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">2</div>
+                            <div>
+                                <h4 class="font-bold text-gray-800">作答原则</h4>
+                                <p class="text-sm text-gray-500 mt-1">请根据您最近一周的实际感受作答，凭第一反应选择。</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">3</div>
+                            <div>
+                                <h4 class="font-bold text-gray-800">结果说明</h4>
+                                <p class="text-sm text-gray-500 mt-1">本测试仅为筛查工具，不能替代专业诊断。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="bg-gray-900 text-gray-400 py-8 text-center text-xs">
+                <p>© 2025 SCL-90 症状自评量表 | 仅供心理健康筛查使用</p>
+                <div class="mt-2 space-x-4">
+                    <a href="#" class="hover:text-white">隐私政策</a>
+                    <a href="#" class="hover:text-white">联系我们</a>
+                </div>
+            </footer>
+        </div>
+
+        <div v-else-if="currentView === 'quiz'" class="max-w-2xl mx-auto px-4 py-10">
+            <div class="mb-8">
+                <div class="flex justify-between text-sm text-gray-500 mb-2 font-medium">
+                    <span>第 {{ currentQuestionIndex + 1 }} 题</span>
+                    <span>共 90 题</span>
+                </div>
+                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-primary transition-all duration-300" :style="{ width: progressPercent + '%' }"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-8 min-h-[320px] flex flex-col justify-center">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-8 text-center leading-normal">
+                    {{ currentQuestion.text }}
+                </h2>
+
+                <div class="space-y-3">
+                    <button v-for="opt in options" :key="opt.score" 
+                        @click="selectAnswer(opt.score)"
+                        class="w-full text-left px-6 py-4 rounded-xl border border-gray-100 hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-between group">
+                        <span class="text-gray-700 font-medium group-hover:text-primary">{{ opt.label }}</span>
+                        <div class="w-4 h-4 rounded-full border border-gray-300 group-hover:border-primary"></div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button v-if="currentQuestionIndex > 0" @click="prevQuestion" class="text-gray-400 hover:text-gray-600 text-sm underline">
+                    &lt; 返回上一题
+                </button>
+            </div>
+        </div>
+
+        <div v-else-if="currentView === 'result'" class="max-w-3xl mx-auto px-4 py-8 space-y-8">
+            
+            <div class="text-center space-y-2">
+                <h1 class="text-2xl font-bold text-gray-800">SCL-90症状自评量表</h1>
+                <p class="text-sm text-gray-500 font-medium">测试结果仅供参考，不作诊断使用</p>
+            </div>
+
+            <div class="bg-[#f8f9fa] rounded-xl py-8 text-center">
+                <p class="text-gray-500 text-sm mb-2">您的SCL-90总分</p>
+                <div class="text-5xl font-bold text-primary mb-3">{{ totalScore }}</div>
+                <p class="text-gray-500 text-sm">单项平均分: {{ averageScore }}</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm p-4">
+                <canvas id="radarChart" class="w-full max-h-[300px]"></canvas>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">各因子得分及测试情况</h3>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-[#f0fdf4] text-gray-700 font-bold">
+                            <tr>
+                                <th class="p-4">因子名称</th>
+                                <th class="p-4 text-center">总分</th>
+                                <th class="p-4 text-center">平均分</th>
+                                <th class="p-4 text-center">测试情况</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr v-for="item in factorResults" :key="item.name" class="table-row">
+                                <td class="p-4 font-medium text-gray-600">{{ item.name }}</td>
+                                <td class="p-4 text-center text-gray-500">{{ item.score }}</td>
+                                <td class="p-4 text-center text-gray-500">{{ item.avg }}</td>
+                                <td class="p-4 text-center">
+                                    <span class="px-2 py-1 text-xs text-white rounded font-bold" :class="getStatusColor(item.avg)">
+                                        {{ getStatusText(item.avg) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">因子解释说明</h3>
+                <div class="space-y-6 bg-white p-6 rounded-xl shadow-sm">
+                    <div v-for="item in factorResults" :key="item.name + '_desc'" class="pl-4 border-l-4 border-primary">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="font-bold text-gray-800">{{ item.name }}</span>
+                            <span class="text-xs text-white px-1.5 py-0.5 rounded font-medium" :class="getStatusColor(item.avg)">
+                                {{ getStatusText(item.avg) }}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-500 leading-relaxed text-justify">
+                            {{ item.fullDesc }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#e6f4ea] rounded-xl p-6 md:p-8">
+                <h3 class="font-bold text-gray-800 mb-4">结果解释</h3>
+                <div class="text-sm text-gray-600 space-y-4 leading-relaxed text-justify">
+                    <p>请用从容的心态来看待本次测试。无论分数如何，请一定记得，我们始终都在你身边。</p>
+                    <p>SCL-90 心理健康自评量表涵盖了情绪状态、思维模式、人际关系、生活习惯等多个维度。需要知道的是，量表得分仅仅是近期心理感受的投射。</p>
+                    
+                    <div class="py-2">
+                        <p class="font-bold mb-2">测试情况分级标准：</p>
+                        <ul class="space-y-2 pl-2">
+                            <li class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-primary"></span>
+                                <span>平均分 1.0-2.0分，症状轻微或偶尔出现 (正常)</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                                <span>平均分 2.0-3.0分，症状明显但不影响日常生活 (轻度/中度)</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                <span>平均分 3.0-4.0分，症状明显且对日常生活有一定影响 (中重度)</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-danger"></span>
+                                <span>平均分 4.0-5.0分，症状严重且明显影响日常生活 (严重)</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <p>按中国常模结果，如果您的SCL90总分超过160分，单项均分超过2分就应作进一步检查。标准分为大于200分说明你有很明显的心理问题。</p>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button @click="restart" class="bg-primary text-white font-bold py-3 px-10 rounded hover:bg-primaryDark transition w-full md:w-auto">
+                        重新测试
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <div v-if="showAuthModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center relative animate-bounce-in">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">需要测评授权</h3>
+            <p class="text-gray-500 text-sm mb-6">请输入您的专属授权码以开启专业测评</p>
+            
+            <input type="tel" v-model="authCode" placeholder="请输入8位数字授权码" maxlength="8"
+                class="w-full text-center text-3xl font-mono font-bold tracking-widest py-3 border-b-2 border-gray-200 focus:border-primary focus:outline-none mb-6 text-gray-800">
+            
+            <button @click="verifyCode" class="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-primaryDark transition shadow-lg shadow-primary/30">
+                确认进入
+            </button>
+            
+            <div class="mt-6 text-sm">
+                <span class="text-gray-400">没有授权码？</span>
+                <a :href="buyLink" target="_blank" class="text-primary font-bold hover:underline ml-1">点击获取</a>
+            </div>
+
+            <p v-if="authError" class="absolute top-2 left-0 w-full text-danger text-xs font-bold animate-pulse">
+                授权码错误，请检查输入
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const { createApp, ref, computed, nextTick } = Vue;
+
+createApp({
+    setup() {
+        // ============ 1. 配置区 (请修改这里) ============
+        // 你的小红书商品链接
+        const buyLink = "https://www.xiaohongshu.com/your-product-link"; 
+        // 你的有效授权码列表
+        const validCodes = ['88888888', '12345678', '66666666'];
+
+        // ============ 2. 状态管理 ============
+        const currentView = ref('landing'); 
+        const showAuthModal = ref(false);
+        const authCode = ref('');
+        const authError = ref(false);
+        
+        const currentQuestionIndex = ref(0);
+        const answers = ref([]); // 存储用户得分 (1-5)
+        
+        // 结果数据
+        const totalScore = ref(0);
+        const averageScore = ref(0);
+        const factorResults = ref([]);
+
+        // ============ 3. 完整 SCL-90 题库 (90题) ============
+        const questions = [
+            {id:1,text:"头痛"},{id:2,text:"神经过敏，心中不踏实"},{id:3,text:"头脑中有不必要的想法或字句盘旋"},{id:4,text:"头昏或昏倒"},{id:5,text:"对异性的兴趣减退"},
+            {id:6,text:"对旁人责备求全"},{id:7,text:"感到别人能控制您的思想"},{id:8,text:"责怪别人制造麻烦"},{id:9,text:"忘性大"},{id:10,text:"担心自己的衣饰整齐及仪态的端正"},
+            {id:11,text:"容易烦恼和激动"},{id:12,text:"胸痛"},{id:13,text:"害怕空旷的场所或街道"},{id:14,text:"感到自己的精力下降，活动减慢"},{id:15,text:"想结束自己的生命"},
+            {id:16,text:"听到旁人听不到的声音"},{id:17,text:"发抖"},{id:18,text:"感到大多数人都不可信"},{id:19,text:"胃口不好，吃得不下"},{id:20,text:"容易哭泣"},
+            {id:21,text:"同异性相处时感到害羞不自在"},{id:22,text:"感到受骗，中了圈套或有人想抓住您"},{id:23,text:"无缘无故地突然感到害怕"},{id:24,text:"自己不能控制地发脾气"},{id:25,text:"怕单独出门"},
+            {id:26,text:"经常责怪自己"},{id:27,text:"腰痛"},{id:28,text:"感到难以完成任务"},{id:29,text:"感到孤独"},{id:30,text:"感到苦闷"},
+            {id:31,text:"过分担忧"},{id:32,text:"对事物不感兴趣"},{id:33,text:"感到害怕"},{id:34,text:"您的感情容易受到伤害"},{id:35,text:"旁人能知道您的私下想法"},
+            {id:36,text:"感到别人不理解您、不同情您"},{id:37,text:"感到人们对您不友好，不喜欢您"},{id:38,text:"做事必须做得很慢以保证做得正确"},{id:39,text:"心跳得很厉害"},{id:40,text:"恶心或胃部不舒服"},
+            {id:41,text:"感到比不上他人"},{id:42,text:"肌肉酸痛"},{id:43,text:"感到有人在监视您、谈论您"},{id:44,text:"难以入睡"},{id:45,text:"做事必须反复检查"},
+            {id:46,text:"难以作出决定"},{id:47,text:"怕乘电车、公共汽车、地铁或火车"},{id:48,text:"呼吸有困难"},{id:49,text:"一阵阵发冷或发热"},{id:50,text:"因为感到害怕而避开某些东西、场合或活动"},
+            {id:51,text:"脑子变空了"},{id:52,text:"身体发麻或刺痛"},{id:53,text:"喉咙有梗塞感"},{id:54,text:"感到没有前途没有希望"},{id:55,text:"不能集中注意力"},
+            {id:56,text:"感到身体的某一部分软弱无力"},{id:57,text:"感到紧张或容易紧张"},{id:58,text:"感到手或脚发重"},{id:59,text:"想到死亡的事"},{id:60,text:"吃得太多"},
+            {id:61,text:"当别人看着您或谈论您时感到不自在"},{id:62,text:"有一些不属于您自己的想法"},{id:63,text:"有想打人或伤害他人的冲动"},{id:64,text:"醒得太早"},{id:65,text:"必须反复洗手、点数目或触摸某些东西"},
+            {id:66,text:"睡得不稳不深"},{id:67,text:"有想摔坏或破坏东西的冲动"},{id:68,text:"有想与人争论或吵架的冲动"},{id:69,text:"感到对别人不好意思"},{id:70,text:"在商店或电影院等人多的地方感到不自在"},
+            {id:71,text:"感到任何事情都很困难"},{id:72,text:"认为自己的事情对别人没有关系"},{id:73,text:"感到在公共场合吃东西很不舒服"},{id:74,text:"经常与人争论"},{id:75,text:"单独一人时神经很紧张"},
+            {id:76,text:"别人对您的成绩没有作出恰当的评价"},{id:77,text:"即使和别人在一起也感到孤单"},{id:78,text:"感到坐立不安，心神不定"},{id:79,text:"感到自己没有价值"},{id:80,text:"感到熟悉的东西变成陌生或不像是真的"},
+            {id:81,text:"大叫或摔东西"},{id:82,text:"害怕会在公共场合昏倒"},{id:83,text:"感到别人想利用您"},{id:84,text:"为一些有关性的念头而很苦恼"},{id:85,text:"认为自己应该因为自己的过错而受到惩罚"},
+            {id:86,text:"感到要很快把事情做完"},{id:87,text:"感到自己的身体有严重问题"},{id:88,text:"从未感到和其他人很亲近"},{id:89,text:"感到有罪"},{id:90,text:"感到自己的脑子有毛病"}
+        ];
+
+        const options = [
+            { label: '从无', score: 1 },
+            { label: '很轻', score: 2 },
+            { label: '中等', score: 3 },
+            { label: '偏重', score: 4 },
+            { label: '严重', score: 5 }
+        ];
+
+        // 首页9大维度介绍
+        const factorsInfo = [
+            {title: "躯体化", desc: "身体不适症状（头痛、胸闷等）"},
+            {title: "强迫", desc: "强迫思维和行为（反复检查等）"},
+            {title: "人际敏感", desc: "人际交往不适感（自卑、社交焦虑）"},
+            {title: "抑郁", desc: "情绪低落、兴趣减退等抑郁症状"},
+            {title: "焦虑", desc: "紧张、心慌等焦虑症状"},
+            {title: "敌对", desc: "易怒、攻击倾向等敌对表现"},
+            {title: "恐怖", desc: "特定恐惧、广场恐惧等"},
+            {title: "偏执", desc: "猜疑、被害妄想等偏执思维"},
+            {title: "精神病性", desc: "幻觉、思维混乱等精神病性症状"}
+        ];
+
+        // 因子计算映射 (含睡眠饮食)
+        const factorMap = [
+            { name: '躯体化', items: [1,12,27,40,42,48,49,52,53,56,58], desc: '主要反映身体上的不适症状，如头痛、胸痛、肌肉酸痛等。高分可能表明存在明显的身体不适或躯体化症状，即心理压力转化为身体症状表现出来。' },
+            { name: '强迫症状', items: [3,9,10,28,38,45,46,51,55,65], desc: '主要指那些明知没有必要，但又无法摆脱的无意义的思想、冲动和行为。高分可能表明有明显的强迫观念或行为，如反复思考、反复检查等。' },
+            { name: '人际关系敏感', items: [6,21,34,36,37,41,61,69,73], desc: '主要指某些个人不自在与自卑感，特别是与其他人相比较时更加突出。高分可能表明在人际交往中存在明显的不适应感、自卑感或对他人评价过度敏感。' },
+            { name: '抑郁症状', items: [5,14,15,20,22,26,29,30,31,32,54,71,79], desc: '主要反映抑郁情绪，包括对生活的兴趣减退、缺乏动力、感到孤独、苦闷、甚至有自杀念头等。高分可能表明存在明显的抑郁倾向或抑郁状态。' },
+            { name: '焦虑症状', items: [2,17,23,33,39,57,72,78,80,86], desc: '主要反映焦虑情绪，包括神经过敏、紧张、害怕、发抖等。高分可能表明存在明显的焦虑情绪或焦虑状态，表现为过度担忧和紧张不安。' },
+            { name: '敌对症状', items: [11,24,63,67,74,81], desc: '主要从思维、情感及行为三方面来反映敌对表现，包括容易烦恼和激动、有想打人或伤害他人的冲动等。高分可能表明存在明显的敌对情绪或攻击性行为倾向。' },
+            { name: '恐怖症状', items: [13,25,47,50,70,75,82], desc: '主要反映对某些特定环境或事物的恐惧，如害怕空旷的场所、怕乘公共交通工具等。高分可能表明存在明显的恐惧症状或特定恐惧症。' },
+            { name: '偏执症状', items: [8,18,43,68,76,83], desc: '主要指猜疑和关系妄想等。包括感到大多数人都不可信、感到有人在监视您、谈论您等。高分可能表明存在明显的偏执观念，对他人的怀疑态度。' },
+            { name: '精神病性', items: [7,16,35,62,77,84,85,87,88,90], desc: '主要反映一些精神病性症状，如听到旁人听不到的声音、感到别人能控制您的思想、有一些别人没有的想法等。高分可能表明存在某些精神病性症状，需要专业评估。' },
+            { name: '睡眠饮食', items: [19,44,59,60,64,66,89], desc: '主要反映睡眠和饮食方面的问题，如胃口不好、难以入睡、睡得不稳不深、吃得太多等。高分可能表明存在明显的睡眠或饮食障碍，这往往是心理压力的重要表现。' }
+        ];
+
+        // ============ 4. 交互逻辑 ============
+        const handleStartClick = () => { showAuthModal.value = true; };
+        
+        const verifyCode = () => {
+            if (validCodes.includes(authCode.value)) {
+                showAuthModal.value = false;
+                currentView.value = 'quiz';
+                window.scrollTo(0, 0);
+            } else {
+                authError.value = true;
+                setTimeout(() => authError.value = false, 2000);
+            }
+        };
+
+        const selectAnswer = (score) => {
+            answers.value[currentQuestionIndex.value] = score;
+            if (currentQuestionIndex.value < questions.length - 1) {
+                currentQuestionIndex.value++;
+            } else {
+                calculate();
+            }
+        };
+
+        const prevQuestion = () => {
+            if(currentQuestionIndex.value > 0) currentQuestionIndex.value--;
+        };
+
+        const calculate = () => {
+            // 1. 计算总分
+            let sum = 0;
+            answers.value.forEach(s => sum += s);
+            totalScore.value = sum;
+            averageScore.value = (sum / 90).toFixed(2);
+
+            // 2. 计算因子分
+            factorResults.value = factorMap.map(f => {
+                let fSum = 0;
+                f.items.forEach(idx => fSum += (answers.value[idx-1] || 1));
+                let avg = (fSum / f.items.length).toFixed(2);
+                return {
+                    name: f.name,
+                    score: fSum,
+                    avg: avg,
+                    fullDesc: f.desc
+                };
+            });
+
+            currentView.value = 'result';
+            window.scrollTo(0,0);
+            nextTick(drawChart);
+        };
+
+        const restart = () => {
+            currentView.value = 'landing';
+            answers.value = [];
+            currentQuestionIndex.value = 0;
+        };
+
+        // 状态样式辅助
+        const getStatusText = (val) => {
+            if(val < 2) return '轻微'; // 绿色
+            if(val < 3) return '中度'; // 橙色
+            return '严重'; // 红色
+        };
+
+        const getStatusColor = (val) => {
+            if(val < 2) return 'bg-primary'; // green
+            if(val < 3) return 'bg-secondary'; // orange
+            return 'bg-danger'; // red
+        };
+
+        const scrollTo = (id) => {
+            const el = document.getElementById(id);
+            if(el) el.scrollIntoView({behavior: 'smooth'});
+        };
+
+        const drawChart = () => {
+            const ctx = document.getElementById('radarChart');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: factorResults.value.map(i => i.name),
+                    datasets: [{
+                        label: '因子得分',
+                        data: factorResults.value.map(i => i.avg),
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                        borderColor: '#4caf50',
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#4caf50',
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: { min: 0, max: 5, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        };
+
+        return {
+            currentView, showAuthModal, authCode, authError, buyLink,
+            questions, currentQuestionIndex, options,
+            factorsInfo, factorResults,
+            totalScore, averageScore,
+            handleStartClick, verifyCode, selectAnswer, prevQuestion,
+            restart, getStatusText, getStatusColor, scrollTo,
+            progressPercent: computed(() => ((currentQuestionIndex.value+1)/90)*100),
+            currentQuestion: computed(() => questions[currentQuestionIndex.value])
+        };
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
